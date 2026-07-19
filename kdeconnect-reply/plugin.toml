@@ -1,0 +1,23 @@
+# Reply to replyable KDE Connect notifications (LINE, SMS, …) from a native
+# Noctalia panel, instead of the stock Qt dialog.
+
+id = "mrsmsn/kdeconnect-reply"
+name = "KDE Connect Reply"
+version = "0.1.0"
+plugin_api = 3
+min_noctalia = "5.0.0"
+author = "mrsmsn"
+license = "MIT"
+dependencies = ["kdeconnect", "jq"]
+tags = ["kdeconnect", "notifications", "messaging"]
+icon = "message-circle"
+description = "Pick a conversation from your phone's replyable notifications and answer it from a native Noctalia panel."
+
+# Open with: noctalia msg panel-toggle mrsmsn/kdeconnect-reply:reply
+[[panel]]
+id = "reply"
+entry = "panel.luau"
+width = 520
+height = 400
+placement = "attached"
+position = "auto"

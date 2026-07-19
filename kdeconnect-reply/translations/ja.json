@@ -1,0 +1,9 @@
+{
+  "title": "KDE Connect 返信",
+  "loading": "通知を読み込み中…",
+  "empty": "返信可能な通知がありません",
+  "placeholder": "返信を入力して Enter…",
+  "sending": "送信中…",
+  "sent": "{title} に返信しました",
+  "send_failed": "返信の送信に失敗しました"
+}
