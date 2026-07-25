@@ -25,7 +25,8 @@ busctl --user tree --list org.kde.kdeconnect.daemon 2>/dev/null \
             title: .title.data,
             text: .text.data,
             iconPath: .iconPath.data,
-            replyId: .replyId.data
+            replyId: .replyId.data,
+            dismissable: .dismissable.data
           }'
     done | jq -sc '[.[] | select(.replyId != null and .replyId != "")]'
 ]]
@@ -34,6 +35,7 @@ local conversations = {}
 local selectedIndex = 1
 local loading = false
 local sending = false
+local dismissing = false
 local status = nil
 
 local render
@@ -121,6 +123,29 @@ local function send(text)
   end, 10000)
 end
 
+-- dismiss() removes the daemon-side object only after the phone confirms, so an
+-- immediate refresh() would race and re-list the notification; drop it locally.
+local function dismiss(index)
+  local conv = conversations[index]
+  if sending or dismissing or conv == nil then
+    return
+  end
+  dismissing = true
+  local cmd = `busctl --user call {SERVICE} {shellQuote(conv.path)} {IFACE} dismiss`
+  noctalia.runAsync(cmd, function(result)
+    dismissing = false
+    if result.exitCode == 0 then
+      table.remove(conversations, index)
+      if selectedIndex < 1 or selectedIndex > #conversations then
+        selectedIndex = 1
+      end
+    else
+      status = tr("dismiss_failed") .. ": " .. (result.stderr ~= "" and result.stderr or `exit {result.exitCode}`)
+    end
+    render()
+  end, 10000)
+end
+
 local function convRow(conv, index)
   local isSelected = index == selectedIndex
   local children = {}
@@ -140,6 +165,15 @@ local function convRow(conv, index)
       render()
     end),
   }))
+  if conv.dismissable == true then
+    table.insert(children, ui.button({
+      glyph = "trash",
+      variant = "ghost",
+      onClick = rowCallback("onDismiss", index, function()
+        dismiss(index)
+      end),
+    }))
+  end
   -- Selection is part of the key: retained buttons keep their variant, so the
   -- row is recreated when selection flips.
   return ui.row({ key = conv.path .. (isSelected and "-sel" or ""), gap = 8, align = "center" }, children)

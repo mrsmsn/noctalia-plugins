@@ -5,5 +5,6 @@
   "placeholder": "Type a reply and press Enter…",
   "sending": "Sending…",
   "sent": "Reply sent to {title}",
-  "send_failed": "Failed to send reply"
+  "send_failed": "Failed to send reply",
+  "dismiss_failed": "Failed to dismiss notification"
 }
