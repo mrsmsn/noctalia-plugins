@@ -37,8 +37,17 @@ local loading = false
 local sending = false
 local dismissing = false
 local status = nil
+local draft = ""
+local inputGeneration = 0
 
 local render
+
+-- `focus = true` only fires when the input control is created, so re-focusing
+-- after a mouse interaction requires a fresh key; draft carries the text over.
+local function focusInput()
+  inputGeneration += 1
+  render()
+end
 
 -- Per-row callbacks need distinct global names; the reconciler dispatches
 -- callbacks by name only (same pattern as the official notes plugin).
@@ -139,6 +148,7 @@ local function dismiss(index)
       if selectedIndex < 1 or selectedIndex > #conversations then
         selectedIndex = 1
       end
+      inputGeneration += 1
     else
       status = tr("dismiss_failed") .. ": " .. (result.stderr ~= "" and result.stderr or `exit {result.exitCode}`)
     end
@@ -162,7 +172,7 @@ local function convRow(conv, index)
     flexGrow = 1,
     onClick = rowCallback("onPick", index, function()
       selectedIndex = index
-      render()
+      focusInput()
     end),
   }))
   if conv.dismissable == true then
@@ -204,8 +214,11 @@ local function body()
     }))
   end
   table.insert(children, ui.input({
-    key = "reply",
+    key = "reply-" .. inputGeneration,
+    value = draft,
+    focus = true,
     placeholder = tr("placeholder"),
+    onChange = "onReplyChange",
     onSubmit = "onReplySubmit",
   }))
   if status ~= nil then
@@ -226,8 +239,25 @@ render = function()
   }))
 end
 
+function onReplyChange(value)
+  draft = value or ""
+end
+
 function onReplySubmit(value)
   send(noctalia.string.trim(value or ""))
+end
+
+function onKey(chord, pressed)
+  if not pressed or #conversations == 0 then
+    return
+  end
+  if chord == "up" then
+    selectedIndex = math.max(1, selectedIndex - 1)
+    render()
+  elseif chord == "down" then
+    selectedIndex = math.min(#conversations, selectedIndex + 1)
+    render()
+  end
 end
 
 function onRefresh()
@@ -240,5 +270,6 @@ end
 
 function onOpen(_context)
   selectedIndex = 1
+  draft = ""
   refresh()
 end

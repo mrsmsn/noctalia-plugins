@@ -4,7 +4,7 @@
 id = "mrsmsn/kdeconnect-reply"
 name = "KDE Connect Reply"
 version = "0.1.0"
-plugin_api = 3
+plugin_api = 13
 min_noctalia = "5.0.0"
 author = "mrsmsn"
 license = "MIT"
@@ -21,3 +21,5 @@ width = 520
 height = 400
 placement = "attached"
 position = "auto"
+keyboard_focus = "on_demand"
+capture_keys = ["up", "down"]
